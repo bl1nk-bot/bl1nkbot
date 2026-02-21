@@ -1,0 +1,51 @@
+name: Sync to S3
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/S3BedrockSyncRole
+        aws-region: ${{ secrets.AWS_REGION }}
+    
+    - name: Sync files to S3
+      run: |
+        aws s3 sync . s3://${{ secrets.AWS_BUCKET_NAME }}/knowledge-base/ \
+          --exclude '.git*' \
+          --exclude '.github*' \
+          --exclude 'node_modules/*' \
+          --exclude '.next/*' \
+          --exclude 'dist/*' \
+          --delete
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install boto3 python-dotenv
+    
+    - name: Run upload test
+      run: python upload_test.py
+      env:
+        AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+    
+    - name: List S3 contents
+      run: |
+        aws s3 ls s3://${{ secrets.AWS_BUCKET_NAME }}/knowledge-base/ --recursive
