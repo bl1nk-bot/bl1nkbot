@@ -65,7 +65,7 @@
     "mysql2": "^3.15.0",
     "nanoid": "^5.1.5",
     "next-themes": "^0.4.6",
-    "openai": "^4.67.0",
+    "openai": "^4.104.0",
     "react": "^19.1.1",
     "react-day-picker": "^9.11.1",
     "react-dom": "^19.1.1",
@@ -84,7 +84,6 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@builder.io/vite-plugin-jsx-loc": "^0.1.1",
     "@tailwindcss/typography": "^0.5.15",
     "@tailwindcss/vite": "^4.1.3",
     "@types/bcrypt": "^6.0.0",
@@ -118,6 +117,12 @@
     },
     "overrides": {
       "tailwindcss>nanoid": "3.3.7"
+    },
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "@builder.io/vite-plugin-jsx-loc>vite": "7",
+        "openai>zod": "4"
+      }
     }
   }
 }
