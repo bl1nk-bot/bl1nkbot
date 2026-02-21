@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Docs from "./pages/Docs";
 import ApiReference from "./pages/ApiReference";
 import Footer from "./components/Footer";
+import { Analytics } from "@vercel/analytics/react";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -47,6 +48,7 @@ function App() {
             <Router />
             <Footer />
           </div>
+          <Analytics />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
