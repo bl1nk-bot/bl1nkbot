@@ -8,8 +8,14 @@ import {
   getUserAccountByApiKey,
   updateUserAccount,
   getUserAccountById,
+  upsertUser,
+  getUserByOpenId,
+  getUserById,
 } from "../db";
 import { z } from "zod";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
+import { signSession } from "../_core/session";
+import { getSessionCookieOptions } from "../_core/cookies";
 
 /**
  * User account router for managing user credentials and API keys
@@ -26,7 +32,7 @@ export const userAccountsRouter = router({
         provider: z.string().default("email"),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         // Check if user already exists
         const existing = await getUserAccountByEmail(input.email);
@@ -44,9 +50,26 @@ export const userAccountsRouter = router({
         const apiKey = `sk_${uuidv4()}`;
         const testApiKey = `test_sk_${uuidv4()}`;
 
+        // Create user record (no OAuth)
+        const openId = `ua_${uuidv4()}`;
+        await upsertUser({
+          openId,
+          email: input.email,
+          name: input.email.split("@")[0],
+          loginMethod: "email",
+          lastSignedIn: new Date(),
+        });
+        const user = await getUserByOpenId(openId);
+        if (!user) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create user",
+          });
+        }
+
         // Create user account
         const account = await createUserAccount({
-          userId: 0, // Will be updated with actual user ID
+          userId: user.id,
           email: input.email,
           passwordHash,
           apiKey,
@@ -62,6 +85,17 @@ export const userAccountsRouter = router({
             message: "Failed to create user account",
           });
         }
+
+        // Set session cookie
+        const sessionToken = await signSession(
+          { openId: user.openId, name: user.name || "" },
+          ONE_YEAR_MS
+        );
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, {
+          ...cookieOptions,
+          maxAge: ONE_YEAR_MS,
+        });
 
         return {
           id: account.id,
@@ -91,7 +125,7 @@ export const userAccountsRouter = router({
         password: z.string(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const account = await getUserAccountByEmail(input.email);
         if (!account) {
@@ -109,6 +143,37 @@ export const userAccountsRouter = router({
             message: "Invalid email or password",
           });
         }
+
+        // Ensure user exists for this account
+        let user = await getUserById(account.userId);
+        if (!user) {
+          const openId = `ua_${uuidv4()}`;
+          await upsertUser({
+            openId,
+            email: account.email,
+            name: account.email.split("@")[0],
+            loginMethod: "email",
+            lastSignedIn: new Date(),
+          });
+          user = await getUserByOpenId(openId);
+        }
+
+        if (!user) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to load user",
+          });
+        }
+
+        const sessionToken = await signSession(
+          { openId: user.openId, name: user.name || "" },
+          ONE_YEAR_MS
+        );
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, {
+          ...cookieOptions,
+          maxAge: ONE_YEAR_MS,
+        });
 
         return {
           id: account.id,

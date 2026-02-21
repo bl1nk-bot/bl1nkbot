@@ -25,6 +25,10 @@ CLICKHOUSE_USER=default
 CLICKHOUSE_PASSWORD=your-password
 CLICKHOUSE_DATABASE=default
 CLICKHOUSE_LOGGING=true
+VITE_FRONTEND_FORGE_API_URL=https://forge.manus.ai
+VITE_FRONTEND_FORGE_API_KEY=your-frontend-forge-key
+BUILT_IN_FORGE_API_URL=https://forge.manus.ai
+BUILT_IN_FORGE_API_KEY=your-backend-forge-key
 AWS_REGION=us-east-1
 ```
 

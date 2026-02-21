@@ -116,7 +116,7 @@ importers:
         specifier: ^11.6.0
         version: 11.6.0(typescript@5.9.3)
       '@vercel/analytics':
-        specifier: ^1.4.1
+        specifier: ^1.6.1
         version: 1.6.1(react@19.2.0)
       axios:
         specifier: ^1.12.0

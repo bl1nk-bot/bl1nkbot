@@ -24,7 +24,6 @@ const docsSidebar = [
       { label: "Overview", href: "/docs/auth/overview" },
       { label: "Email & Password", href: "/docs/auth/email-password" },
       { label: "API Keys", href: "/docs/auth/api-keys" },
-      { label: "OAuth", href: "/docs/auth/oauth" },
     ],
   },
   {

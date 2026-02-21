@@ -44,14 +44,12 @@ cp .env.example .env
 
 แก้ไขค่าต่อไปนี้:
 - `DATABASE_URL`: MySQL connection string
-- `AWS_BUCKET_NAME`: S3 bucket name
-- `AWS_REGION`: AWS region
+- `JWT_SECRET`: Secret key สำหรับ JWT
 - `CLICKHOUSE_URL`: ClickHouse endpoint (Cloud or self-hosted)
 - `CLICKHOUSE_USER`: ClickHouse user
 - `CLICKHOUSE_PASSWORD`: ClickHouse password
 - `CLICKHOUSE_DATABASE`: ClickHouse database
 - `CLICKHOUSE_LOGGING`: Enable/disable ClickHouse logging (true/false)
-- `JWT_SECRET`: Secret key สำหรับ JWT
 
 ### 4. Setup Database
 
