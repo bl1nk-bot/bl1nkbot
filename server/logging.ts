@@ -1,4 +1,4 @@
-import { storagePut, storageGet } from "./storage";
+import { getClickHouseClient } from "./clickhouse";
 
 /**
  * Log entry structure for storing in S3
@@ -7,6 +7,7 @@ export interface LogEntry {
   timestamp: string;
   level: "info" | "warn" | "error" | "debug";
   message: string;
+  requestId?: string;
   userId?: number;
   apiKey?: string;
   endpoint?: string;
@@ -44,12 +45,17 @@ export class Logger {
   private readonly maxLogsBeforeFlush = 100;
   private readonly flushIntervalMs = 60000; // 1 minute
   private flushInterval: NodeJS.Timeout | null = null;
+  private tableEnsured = false;
 
   constructor() {
     // Auto-flush logs periodically
     this.flushInterval = setInterval(() => {
       this.flush().catch((err) => console.error("[Logger] Failed to flush logs:", err));
     }, this.flushIntervalMs);
+    // Best-effort init
+    this.ensureTable().catch((err) =>
+      console.error("[Logger] Failed to ensure ClickHouse table:", err)
+    );
   }
 
   /**
@@ -170,18 +176,37 @@ export class Logger {
       return;
     }
 
+    const client = getClickHouseClient();
+    if (!client) {
+      return;
+    }
+
     const logsToFlush = [...this.logs];
     this.logs = [];
 
     try {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const logKey = `logs/${timestamp}-${Date.now()}.json`;
-      const logContent = JSON.stringify(logsToFlush, null, 2);
+      await this.ensureTable();
+      const rows = logsToFlush.map((log) => ({
+        timestamp: new Date(log.timestamp),
+        level: log.level,
+        message: log.message,
+        requestId: log.requestId ?? null,
+        userId: log.userId ?? null,
+        apiKey: log.apiKey ?? null,
+        endpoint: log.endpoint ?? null,
+        method: log.method ?? null,
+        statusCode: log.statusCode ?? null,
+        duration: log.duration ?? null,
+        metadata: log.metadata ? JSON.stringify(log.metadata) : null,
+      }));
 
-      await storagePut(logKey, logContent, "application/json");
-      console.log(`[Logger] Flushed ${logsToFlush.length} logs to S3: ${logKey}`);
+      await client.insert({
+        table: "logs",
+        values: rows,
+        format: "JSONEachRow",
+      });
     } catch (error) {
-      console.error("[Logger] Failed to flush logs to S3:", error);
+      console.error("[Logger] Failed to flush logs to ClickHouse:", error);
       // Re-add logs if flush fails
       this.logs = [...logsToFlush, ...this.logs];
     }
@@ -192,18 +217,40 @@ export class Logger {
    */
   async getLogs(startDate: Date, endDate: Date): Promise<LogEntry[]> {
     try {
-      const startTimestamp = startDate.toISOString().replace(/[:.]/g, "-");
-      const endTimestamp = endDate.toISOString().replace(/[:.]/g, "-");
+      const client = getClickHouseClient();
+      if (!client) return [];
 
-      // Get presigned URL for logs folder
-      const { url } = await storageGet(`logs/`);
-      console.log(`[Logger] Logs available at: ${url}`);
+      await this.ensureTable();
+      const result = await client.query({
+        query: `
+          SELECT timestamp, level, message, requestId, userId, apiKey, endpoint, method, statusCode, duration, metadata
+          FROM logs
+          WHERE timestamp BETWEEN {start: DateTime} AND {end: DateTime}
+          ORDER BY timestamp DESC
+        `,
+        query_params: {
+          start: startDate,
+          end: endDate,
+        },
+        format: "JSONEachRow",
+      });
 
-      // In a real implementation, you would list objects in S3 and filter by date range
-      // For now, return empty array as placeholder
-      return [];
+      const rows = await result.json();
+      return rows.map((row: any) => ({
+        timestamp: new Date(row.timestamp).toISOString(),
+        level: row.level,
+        message: row.message,
+        requestId: row.requestId ?? undefined,
+        userId: row.userId ?? undefined,
+        apiKey: row.apiKey ?? undefined,
+        endpoint: row.endpoint ?? undefined,
+        method: row.method ?? undefined,
+        statusCode: row.statusCode ?? undefined,
+        duration: row.duration ?? undefined,
+        metadata: row.metadata ? JSON.parse(row.metadata) : undefined,
+      }));
     } catch (error) {
-      console.error("[Logger] Failed to get logs from S3:", error);
+      console.error("[Logger] Failed to get logs from ClickHouse:", error);
       throw error;
     }
   }
@@ -216,6 +263,32 @@ export class Logger {
       clearInterval(this.flushInterval);
     }
     await this.flush();
+  }
+
+  private async ensureTable(): Promise<void> {
+    if (this.tableEnsured) return;
+    const client = getClickHouseClient();
+    if (!client) return;
+    await client.exec({
+      query: `
+        CREATE TABLE IF NOT EXISTS logs (
+          timestamp DateTime,
+          level LowCardinality(String),
+          message String,
+          requestId Nullable(String),
+          userId Nullable(UInt32),
+          apiKey Nullable(String),
+          endpoint Nullable(String),
+          method Nullable(String),
+          statusCode Nullable(UInt16),
+          duration Nullable(UInt32),
+          metadata Nullable(String)
+        )
+        ENGINE = MergeTree()
+        ORDER BY (timestamp, level)
+      `,
+    });
+    this.tableEnsured = true;
   }
 }
 

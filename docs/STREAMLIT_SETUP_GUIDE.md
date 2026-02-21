@@ -42,7 +42,7 @@ git push origin main
 ### 3.3 Deploy Dashboard
 
 1. Click "New app"
-2. Repository: `YOUR-USERNAME/agent-project`
+2. Repository: `bl1nk-bot/bl1nkbot`
 3. Branch: `main`
 4. Main file path: `dashboard.py`
 5. Click "Deploy"

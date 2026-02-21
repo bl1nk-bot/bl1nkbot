@@ -6,8 +6,8 @@
 
 ```bash
 # Clone repository
-git clone https://github.com/YOUR-USERNAME/agent-project.git
-cd agent-project
+git clone https://github.com/bl1nk-bot/bl1nkbot.git
+cd bl1nkbot
 
 # Install dependencies
 pnpm install
@@ -20,6 +20,11 @@ cp .env.example .env
 ```
 DATABASE_URL=mysql://user:password@localhost:3306/user_data_backend
 AWS_BUCKET_NAME=my-agent-bucket-th-2025
+CLICKHOUSE_URL=https://YOUR-CLICKHOUSE-HOST:8443
+CLICKHOUSE_USER=default
+CLICKHOUSE_PASSWORD=your-password
+CLICKHOUSE_DATABASE=default
+CLICKHOUSE_LOGGING=true
 AWS_REGION=us-east-1
 ```
 

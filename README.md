@@ -24,8 +24,8 @@
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/agent-project.git
-cd agent-project
+git clone https://github.com/bl1nk-bot/bl1nkbot.git
+cd bl1nkbot
 ```
 
 ### 2. Install Dependencies
@@ -46,6 +46,11 @@ cp .env.example .env
 - `DATABASE_URL`: MySQL connection string
 - `AWS_BUCKET_NAME`: S3 bucket name
 - `AWS_REGION`: AWS region
+- `CLICKHOUSE_URL`: ClickHouse endpoint (Cloud or self-hosted)
+- `CLICKHOUSE_USER`: ClickHouse user
+- `CLICKHOUSE_PASSWORD`: ClickHouse password
+- `CLICKHOUSE_DATABASE`: ClickHouse database
+- `CLICKHOUSE_LOGGING`: Enable/disable ClickHouse logging (true/false)
 - `JWT_SECRET`: Secret key สำหรับ JWT
 
 ### 4. Setup Database

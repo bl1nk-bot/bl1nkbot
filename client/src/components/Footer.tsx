@@ -67,7 +67,7 @@ export default function Footer() {
             </p>
             <div className="flex gap-4">
               <a
-                href="https://github.com/your-repo"
+                href="https://github.com/bl1nk-bot/bl1nkbot"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-colors"

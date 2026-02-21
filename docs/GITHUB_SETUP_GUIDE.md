@@ -6,7 +6,7 @@
 
 1. ไปที่ [GitHub.com](https://github.com)
 2. Click "New repository"
-3. ตั้งชื่อ: `agent-project`
+3. ตั้งชื่อ: `bl1nkbot`
 4. เลือก "Public" (หรือ Private ตามต้องการ)
 5. เพิ่ม README.md
 6. Click "Create repository"
@@ -14,8 +14,8 @@
 ## ขั้นตอน 2: Clone Repository ไปยัง Local
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/agent-project.git
-cd agent-project
+git clone https://github.com/bl1nk-bot/bl1nkbot.git
+cd bl1nkbot
 ```
 
 ## ขั้นตอน 3: เพิ่มไฟล์ Test
@@ -105,7 +105,7 @@ git push origin main
 ## File Structure ใน Repository
 
 ```
-agent-project/
+bl1nkbot/
 ├── .github/
 │   └── workflows/
 │       └── sync-s3.yml

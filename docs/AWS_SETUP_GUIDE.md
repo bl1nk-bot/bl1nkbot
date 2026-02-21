@@ -56,7 +56,7 @@
       "Condition": {
         "StringEquals": {
           "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-          "token.actions.githubusercontent.com:sub": "repo:YOUR-GITHUB-USERNAME/agent-project:*"
+          "token.actions.githubusercontent.com:sub": "repo:bl1nk-bot/bl1nkbot:*"
         }
       }
     }
